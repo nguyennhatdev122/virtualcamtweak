@@ -6,3 +6,12 @@ Codename: ios
 Architectures: iphoneos-arm64 iphoneos-arm64e iphoneos-arm
 Components: main
 Description: Official VirtualCam Tweak Repository for Sileo
+MD5Sum:
+ 315e2068696ff61f276871ef2f90b99c 1255 Packages
+ f28bd6a276b90c58b35883e74b6d9bec 332 Packages.gz
+SHA1:
+ 0bfd2269fe99e9a7edcf88ce64de75f705683e40 1255 Packages
+ 2861331b849dbae2d038fa6388d05316edbf9031 332 Packages.gz
+SHA256:
+ 4fdea3adbb0a9bd0766d482de67c3e0f291ff692674a4c42d3806690f299f352 1255 Packages
+ 5ca9b528a33aba15849d288d9f7287973ff1e2c6a643ca95d92a1bedb475b3f4 332 Packages.gz
