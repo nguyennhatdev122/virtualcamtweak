@@ -1,8 +1,9 @@
 Package: com.virtualcam.tweak
 Name: VirtualCam
-Version: 1.0.2
+Version: 1.0.3
 Architecture: iphoneos-arm64
-Description: Virtual Camera from PC via USB - Show floating HUD and replace camera feed
+Description: Virtual Camera for iOS system-wide
 Maintainer: VirtualCam Dev
 Author: VirtualCam Dev
 Section: Tweaks
+Tag: role::hacker
