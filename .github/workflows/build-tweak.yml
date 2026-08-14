@@ -8,6 +8,8 @@ on:
 jobs:
   build-tweak:
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -137,7 +139,7 @@ EOF
           cp ./repo/VirtualCam.deb ./repo/dists/stable/main/binary-iphoneos-arm64/VirtualCam.deb
           cp ./repo/VirtualCam.deb ./repo/dists/stable/main/binary-iphoneos-arm64e/VirtualCam.deb
 
-          # Add .nojekyll & index.html
+          # Add .nojekyll
           touch ./repo/.nojekyll
 
           ls -la ./repo/
@@ -149,9 +151,7 @@ EOF
           path: ./output/VirtualCam.deb
           retention-days: 30
 
-      - name: Deploy APT Repo directly via Git to main branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy GPG Signed Repo to main branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -159,4 +159,5 @@ EOF
           cp -r ./repo/* .
           git add Release Release.gpg InRelease Packages Packages.gz key.gpg .nojekyll VirtualCam.deb dists/ 2>/dev/null || true
           git commit -m "Auto-deploy GPG signed APT Repo" || true
-          git push origin main || true
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git push origin main
