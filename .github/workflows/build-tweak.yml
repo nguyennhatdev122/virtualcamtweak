@@ -18,6 +18,14 @@ jobs:
           brew install ldid
           which ldid
 
+      - name: Fix CRLF line endings in all source files
+        run: |
+          echo "=== Converting CRLF to LF for all text files ==="
+          find . -type f \( -name "control" -o -name "Makefile" -o -name "*.plist" -o -name "*.xm" -o -name "*.m" -o -name "*.h" \) \
+            -exec sed -i '' 's/\r$//' {} \;
+          echo "Done. Verifying control file:"
+          cat -A control | head -5
+
       - name: Setup Theos
         run: |
           git clone --recursive https://github.com/theos/theos.git /tmp/theos
@@ -28,11 +36,19 @@ jobs:
           set -o pipefail
           export THEOS=/tmp/theos
           export THEOS_PACKAGE_SCHEME=rootless
-          
+
           echo "=== Running make package ==="
           make package FINALPACKAGE=1 2>&1 | tee build.log
-          
-          echo "=== Searching for generated .deb files ==="
+
+          echo "=== Verifying control in built .deb ==="
+          DEB=$(find . -name "*.deb" | head -1)
+          if [ -n "$DEB" ]; then
+            echo "Found: $DEB"
+            # Extract and show control file from built deb
+            ar p "$DEB" control.tar.xz | tar xJO ./control 2>/dev/null | cat -A | head -10 || true
+          fi
+
+          echo "=== Copying deb to output ==="
           mkdir -p ./output
           find . -name "*.deb" -exec cp {} ./output/ \;
           ls -la ./output/
