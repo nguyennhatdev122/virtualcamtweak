@@ -6,6 +6,27 @@ Description: Virtual Camera for iOS system-wide
 Maintainer: VirtualCam Dev
 Author: VirtualCam Dev
 Section: Tweaks
-Tag: role::hacker
+Filename: VirtualCam.deb
+Size: 19302
+
+Package: com.virtualcam.tweak
+Name: VirtualCam
+Version: 1.0.4
+Architecture: iphoneos-arm64e
+Description: Virtual Camera for iOS system-wide
+Maintainer: VirtualCam Dev
+Author: VirtualCam Dev
+Section: Tweaks
+Filename: VirtualCam.deb
+Size: 19302
+
+Package: com.virtualcam.tweak
+Name: VirtualCam
+Version: 1.0.4
+Architecture: all
+Description: Virtual Camera for iOS system-wide
+Maintainer: VirtualCam Dev
+Author: VirtualCam Dev
+Section: Tweaks
 Filename: VirtualCam.deb
 Size: 19302
