@@ -13,79 +13,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Theos dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             git curl make fakeroot dpkg-dev perl \
             libxml2 libplist-utils xz-utils ca-certificates
-          echo "Dependencies installed"
 
       - name: Setup Theos
         run: |
-          export THEOS=/opt/theos
-          sudo git clone --recursive https://github.com/theos/theos.git $THEOS
-          sudo chmod -R 777 $THEOS
-          echo "THEOS=/opt/theos" >> $GITHUB_ENV
+          git clone --recursive https://github.com/theos/theos.git /tmp/theos
+          echo "THEOS=/tmp/theos" >> $GITHUB_ENV
 
-      - name: Download iOS 16 SDK
+      - name: Setup iOS SDK
         run: |
-          SDKS_DIR=$THEOS/sdks
-          mkdir -p $SDKS_DIR
-          cd $SDKS_DIR
-          # Download prebuilt SDK from official theos-sdks
-          curl -L --retry 3 -o sdk.tar.xz \
-            "https://github.com/theos/sdks/releases/download/master-2024-06/iPhoneOS16.5.sdk.tar.xz" \
-            || curl -L --retry 3 -o sdk.tar.xz \
-            "https://github.com/theos/sdks/archive/refs/heads/master.tar.gz"
-          tar -xf sdk.tar.xz -C $SDKS_DIR 2>/dev/null || true
-          ls -la $SDKS_DIR/
-          echo "SDKs ready"
-
-      - name: Show structure
-        run: |
-          ls -la
-          echo "=== VirtualCamDaemon ===" && ls -la VirtualCamDaemon/
+          mkdir -p /tmp/theos/sdks
+          curl -L "https://github.com/theos/sdks/archive/master.zip" -o /tmp/sdks.zip
+          unzip -q /tmp/sdks.zip -d /tmp/sdks_out
+          cp -r /tmp/sdks_out/sdks-master/* /tmp/theos/sdks/ || true
 
       - name: Build Tweak
         run: |
-          export THEOS=/opt/theos
-          export SDKVERSION=16.5
-          export ARCHS=arm64
+          export THEOS=/tmp/theos
           export THEOS_PACKAGE_SCHEME=rootless
-          make package \
-            FINALPACKAGE=1 \
-            THEOS_PACKAGE_DIR=./packages \
-            2>&1 | tee build_tweak.log
-          echo "Build done"
-          ls -la packages/ 2>/dev/null || echo "No packages dir"
-          find . -name "*.deb" 2>/dev/null
+          mkdir -p ./output
+          make package FINALPACKAGE=1 THEOS_PACKAGE_DIR=./output 2>&1 | tee build.log
+          echo "Output files:"
+          ls -la ./output/
 
-      - name: Find deb
-        id: find_deb
-        run: |
-          DEB=$(find . -name "*.deb" | head -1)
-          echo "deb_path=$DEB" >> $GITHUB_OUTPUT
-          echo "Found: $DEB"
-          ls -lh "$DEB" 2>/dev/null || echo "No deb found"
-          # If no deb, show build errors
-          if [ -z "$DEB" ]; then
-            echo "=== BUILD ERRORS ==="
-            grep -i "error\|failed" build_tweak.log | head -30 || true
-          fi
-
-      - name: Upload deb
-        if: steps.find_deb.outputs.deb_path != ''
+      - name: Upload deb artifact
         uses: actions/upload-artifact@v4
         with:
           name: VirtualCam-Tweak-deb
-          path: ${{ steps.find_deb.outputs.deb_path }}
+          path: ./output/*.deb
           retention-days: 30
-
-      - name: Upload build log (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build_tweak.log
-          retention-days: 7
