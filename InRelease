@@ -1,0 +1,15 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+Origin: VirtualCam Repo
+Label: VirtualCam
+Suite: stable
+Version: 1.0
+Codename: ios
+Architectures: iphoneos-arm64 iphoneos-arm64e iphoneos-arm
+Components: main
+Description: Official VirtualCam Tweak Repository for Sileo
+-----BEGIN PGP SIGNATURE-----
+
+X+eFXMB7oE6p7fwUu2VjVvOypfX7XKA2RdSt1elXbo2QDTldfpbtCZQCiQG7r0WF54gRWc9UVjmooUOtGtH0lQ70E4kuCGEHTlDU2Ti5oTpZfRSYGfXevlXXrPfsp5TAwDKNBa0mD2HMkGbJdmTGC89Yx1hKOyr97AfVirGQE2+FdOqOT3yzdmhF4JIVYiqreUJPfkFVrxqszomxnWIgEiEDnpVjrTEWqkcxVjA59i494aC5TlEsgqQWqGIkZUqZ49Od9l+LsTdzhZbMaUENYmsCJmKnkjFzXa3hsYWHFtTblqLNnsgCEaVoyLFX306mJZPLalNGxXNukA8odIYsNw==
+-----END PGP SIGNATURE-----
