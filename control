@@ -1,9 +1,8 @@
 Package: com.virtualcam.tweak
 Name: VirtualCam
-Version: 1.0.3
+Version: 1.0.5
 Architecture: iphoneos-arm64
-Description: Virtual Camera for iOS system-wide
+Description: Virtual Camera for iOS system-wide & USB Streaming with Floating HUD
 Maintainer: VirtualCam Dev
 Author: VirtualCam Dev
 Section: Tweaks
-Tag: role::hacker
