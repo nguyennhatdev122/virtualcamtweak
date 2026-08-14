@@ -9,6 +9,9 @@ Section: Tweaks
 Tag: role::hacker
 Filename: VirtualCam.deb
 Size: 19302
+MD5sum: 0e3bb08e3eabfe96a2f6413746174bbb
+SHA1: f8b8edb82e8d4f3747b78bafcf4f0d90b2fd4d2b
+SHA256: c165c6f94faf7c99c43627bd7f6488997cb04ea2e2b5aef4ae55129843544645
 
 Package: com.virtualcam.tweak
 Name: VirtualCam
@@ -21,6 +24,9 @@ Section: Tweaks
 Tag: role::hacker
 Filename: VirtualCam.deb
 Size: 19302
+MD5sum: 0e3bb08e3eabfe96a2f6413746174bbb
+SHA1: f8b8edb82e8d4f3747b78bafcf4f0d90b2fd4d2b
+SHA256: c165c6f94faf7c99c43627bd7f6488997cb04ea2e2b5aef4ae55129843544645
 
 Package: com.virtualcam.tweak
 Name: VirtualCam
@@ -33,3 +39,6 @@ Section: Tweaks
 Tag: role::hacker
 Filename: VirtualCam.deb
 Size: 19302
+MD5sum: 0e3bb08e3eabfe96a2f6413746174bbb
+SHA1: f8b8edb82e8d4f3747b78bafcf4f0d90b2fd4d2b
+SHA256: c165c6f94faf7c99c43627bd7f6488997cb04ea2e2b5aef4ae55129843544645
