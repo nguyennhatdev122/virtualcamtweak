@@ -1,0 +1,10 @@
+#!/bin/sh
+if [ -f /var/jb/usr/bin/launchctl ]; then
+    /var/jb/usr/bin/launchctl load /var/jb/Library/LaunchDaemons/com.virtualcam.daemon.plist 2>/dev/null || true
+fi
+if [ -f /usr/bin/killall ]; then
+    /usr/bin/killall -9 SpringBoard 2>/dev/null || true
+elif [ -f /var/jb/usr/bin/killall ]; then
+    /var/jb/usr/bin/killall -9 SpringBoard 2>/dev/null || true
+fi
+exit 0
