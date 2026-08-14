@@ -1,4 +1,4 @@
-name: Build VirtualCam Tweak (.deb)
+name: Build VirtualCam Tweak (.deb) & APT Repo
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 jobs:
   build-tweak:
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -16,15 +18,11 @@ jobs:
       - name: Install ldid
         run: |
           brew install ldid
-          which ldid
 
-      - name: Fix CRLF line endings in all source files
+      - name: Fix CRLF line endings
         run: |
-          echo "=== Converting CRLF to LF for all text files ==="
           find . -type f \( -name "control" -o -name "Makefile" -o -name "*.plist" -o -name "*.xm" -o -name "*.m" -o -name "*.h" \) \
             -exec sed -i '' 's/\r$//' {} \;
-          echo "Done. Verifying control file:"
-          cat -A control | head -5
 
       - name: Setup Theos
         run: |
@@ -40,22 +38,36 @@ jobs:
           echo "=== Running make package ==="
           make package FINALPACKAGE=1 2>&1 | tee build.log
 
-          echo "=== Verifying control in built .deb ==="
-          DEB=$(find . -name "*.deb" | head -1)
-          if [ -n "$DEB" ]; then
-            echo "Found: $DEB"
-            # Extract and show control file from built deb
-            ar p "$DEB" control.tar.xz | tar xJO ./control 2>/dev/null | cat -A | head -10 || true
-          fi
-
-          echo "=== Copying deb to output ==="
           mkdir -p ./output
-          find . -name "*.deb" -exec cp {} ./output/ \;
+          find . -name "*.deb" -exec cp {} ./output/VirtualCam.deb \;
           ls -la ./output/
+
+      - name: Create APT Repo files
+        run: |
+          mkdir -p ./repo
+          cp ./output/VirtualCam.deb ./repo/VirtualCam.deb
+          
+          # Generate control info for Packages file
+          cat control > ./repo/Packages
+          echo "Filename: ./VirtualCam.deb" >> ./repo/Packages
+          echo "Size: $(wc -c < ./output/VirtualCam.deb | tr -d ' ')" >> ./repo/Packages
+          echo "" >> ./repo/Packages
+          
+          gzip -c ./repo/Packages > ./repo/Packages.gz
+          bzip2 -c ./repo/Packages > ./repo/Packages.bz2 2>/dev/null || true
+          
+          ls -la ./repo/
 
       - name: Upload deb artifact
         uses: actions/upload-artifact@v4
         with:
           name: VirtualCam-Tweak-deb
-          path: ./output/*.deb
+          path: ./output/VirtualCam.deb
           retention-days: 30
+
+      - name: Deploy APT Repo to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
+          force_orphan: true
