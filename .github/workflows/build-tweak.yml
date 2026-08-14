@@ -1,4 +1,4 @@
-name: Build VirtualCam Tweak (.deb) & APT Repo
+name: Build VirtualCam Tweak (.deb) & GPG Signed APT Repo
 
 on:
   push:
@@ -13,9 +13,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install ldid
+      - name: Install ldid & gpg
         run: |
-          brew install ldid
+          brew install ldid gnupg
 
       - name: Fix CRLF line endings
         run: |
@@ -40,29 +40,106 @@ jobs:
           find . -name "*.deb" -exec cp {} ./output/VirtualCam.deb \;
           ls -la ./output/
 
-      - name: Create APT Repo files
+      - name: Generate GPG Key & Sign APT Repo
         run: |
           mkdir -p ./repo
           cp ./output/VirtualCam.deb ./repo/VirtualCam.deb
           
-          cat control > ./repo/Packages
-          echo "Filename: ./VirtualCam.deb" >> ./repo/Packages
-          echo "Size: $(wc -c < ./output/VirtualCam.deb | tr -d ' ')" >> ./repo/Packages
-          echo "" >> ./repo/Packages
-          
+          DEB_PATH="./repo/VirtualCam.deb"
+          DEB_SIZE=$(wc -c < "$DEB_PATH" | tr -d ' ')
+          DEB_MD5=$(shasum -a 1 "$DEB_PATH" | awk '{print $1}') # fallback
+          DEB_SHA1=$(shasum -a 1 "$DEB_PATH" | awk '{print $1}')
+          DEB_SHA256=$(shasum -a 256 "$DEB_PATH" | awk '{print $1}')
+
+          # Generate Packages file for all architectures
+          cat << EOF > ./repo/Packages
+Package: com.virtualcam.tweak
+Name: VirtualCam
+Version: 1.0.4
+Architecture: iphoneos-arm64
+Description: Virtual Camera for iOS system-wide
+Maintainer: VirtualCam Dev
+Author: VirtualCam Dev
+Section: Tweaks
+Filename: VirtualCam.deb
+Size: $DEB_SIZE
+SHA1: $DEB_SHA1
+SHA256: $DEB_SHA256
+
+Package: com.virtualcam.tweak
+Name: VirtualCam
+Version: 1.0.4
+Architecture: iphoneos-arm64e
+Description: Virtual Camera for iOS system-wide
+Maintainer: VirtualCam Dev
+Author: VirtualCam Dev
+Section: Tweaks
+Filename: VirtualCam.deb
+Size: $DEB_SIZE
+SHA1: $DEB_SHA1
+SHA256: $DEB_SHA256
+
+Package: com.virtualcam.tweak
+Name: VirtualCam
+Version: 1.0.4
+Architecture: all
+Description: Virtual Camera for iOS system-wide
+Maintainer: VirtualCam Dev
+Author: VirtualCam Dev
+Section: Tweaks
+Filename: VirtualCam.deb
+Size: $DEB_SIZE
+SHA1: $DEB_SHA1
+SHA256: $DEB_SHA256
+EOF
+
           gzip -c ./repo/Packages > ./repo/Packages.gz
-          
-          cat << 'EOF' > ./repo/Release
+
+          PKG_SIZE=$(wc -c < ./repo/Packages | tr -d ' ')
+          PKG_SHA256=$(shasum -a 256 ./repo/Packages | awk '{print $1}')
+          GZ_SIZE=$(wc -c < ./repo/Packages.gz | tr -d ' ')
+          GZ_SHA256=$(shasum -a 256 ./repo/Packages.gz | awk '{print $1}')
+
+          # Generate Release file
+          cat << EOF > ./repo/Release
 Origin: VirtualCam Repo
 Label: VirtualCam
 Suite: stable
 Version: 1.0
 Codename: ios
-Architectures: iphoneos-arm64
+Architectures: iphoneos-arm64 iphoneos-arm64e iphoneos-arm
 Components: main
-Description: Official VirtualCam Tweak Repository for Sileo
+Description: Official GPG Signed VirtualCam Tweak Repository for Sileo
+SHA256:
+ $PKG_SHA256 $PKG_SIZE Packages
+ $GZ_SHA256 $GZ_SIZE Packages.gz
 EOF
+
+          # Create disposable GPG key and sign Release
+          gpg --batch --no-tty --quick-generate-key "VirtualCam Repo <repo@virtualcam.local>" rsa2048 default never
+          KEY_ID=$(gpg --list-keys --with-colons | grep "^pub" | cut -d: -f5 | head -1)
+          echo "Generated GPG Key ID: $KEY_ID"
+
+          gpg --batch --no-tty --yes --detach-sign -o ./repo/Release.gpg ./repo/Release
+          gpg --batch --no-tty --yes --clearsign -o ./repo/InRelease ./repo/Release
+          gpg --batch --no-tty --armor --export "$KEY_ID" > ./repo/key.gpg
           
+          # Create dists layout
+          mkdir -p ./repo/dists/stable/main/binary-iphoneos-arm64
+          mkdir -p ./repo/dists/stable/main/binary-iphoneos-arm64e
+          cp ./repo/Release ./repo/dists/stable/Release
+          cp ./repo/Release.gpg ./repo/dists/stable/Release.gpg
+          cp ./repo/InRelease ./repo/dists/stable/InRelease
+          cp ./repo/Packages ./repo/dists/stable/main/binary-iphoneos-arm64/Packages
+          cp ./repo/Packages.gz ./repo/dists/stable/main/binary-iphoneos-arm64/Packages.gz
+          cp ./repo/Packages ./repo/dists/stable/main/binary-iphoneos-arm64e/Packages
+          cp ./repo/Packages.gz ./repo/dists/stable/main/binary-iphoneos-arm64e/Packages.gz
+          cp ./repo/VirtualCam.deb ./repo/dists/stable/main/binary-iphoneos-arm64/VirtualCam.deb
+          cp ./repo/VirtualCam.deb ./repo/dists/stable/main/binary-iphoneos-arm64e/VirtualCam.deb
+
+          # Add .nojekyll & index.html
+          touch ./repo/.nojekyll
+
           ls -la ./repo/
 
       - name: Upload deb artifact
@@ -72,9 +149,14 @@ EOF
           path: ./output/VirtualCam.deb
           retention-days: 30
 
-      - name: Deploy APT Repo to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          personal_token: ${{ secrets.PAT_TOKEN || github.token }}
-          publish_dir: ./repo
-          force_orphan: true
+      - name: Deploy APT Repo directly via Git to main branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          cp -r ./repo/* .
+          git add Release Release.gpg InRelease Packages Packages.gz key.gpg .nojekyll VirtualCam.deb dists/ 2>/dev/null || true
+          git commit -m "Auto-deploy GPG signed APT Repo" || true
+          git push origin main || true
