@@ -8,8 +8,6 @@ on:
 jobs:
   build-tweak:
     runs-on: macos-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout
@@ -47,16 +45,13 @@ jobs:
           mkdir -p ./repo
           cp ./output/VirtualCam.deb ./repo/VirtualCam.deb
           
-          # Generate Packages file
           cat control > ./repo/Packages
           echo "Filename: ./VirtualCam.deb" >> ./repo/Packages
           echo "Size: $(wc -c < ./output/VirtualCam.deb | tr -d ' ')" >> ./repo/Packages
           echo "" >> ./repo/Packages
           
           gzip -c ./repo/Packages > ./repo/Packages.gz
-          bzip2 -c ./repo/Packages > ./repo/Packages.bz2 2>/dev/null || true
           
-          # Generate Release file required by Sileo/APT
           cat << 'EOF' > ./repo/Release
 Origin: VirtualCam Repo
 Label: VirtualCam
@@ -80,6 +75,6 @@ EOF
       - name: Deploy APT Repo to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ secrets.PAT_TOKEN || github.token }}
           publish_dir: ./repo
           force_orphan: true
