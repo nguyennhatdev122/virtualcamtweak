@@ -1,7 +1,7 @@
 Package: com.virtualcam.tweak
 Name: VirtualCam
-Depends: mobilesubstrate | libhooker | substitute
-Version: 1.0.0
+Depends: mobilesubstrate
+Version: 1.0.1
 Architecture: iphoneos-arm64
 Description: Virtual Camera from PC via USB - Show floating HUD and replace camera feed
 Maintainer: VirtualCam Dev
